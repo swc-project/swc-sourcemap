@@ -125,7 +125,7 @@ impl<'a> Iterator for Lines<'a> {
 /// This type is used to implement fairly efficient source mapping
 /// operations.
 pub struct SourceView {
-    source: Arc<str>,
+    pub(crate) source: Arc<str>,
     line_end_offsets: Mutex<Vec<LineEndOffset>>,
 }
 
