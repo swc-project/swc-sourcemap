@@ -1,8 +1,8 @@
 use std::fmt;
 use std::str;
-use std::sync::Arc;
 use std::sync::Mutex;
 
+use bytes_str::BytesStr;
 use if_chain::if_chain;
 
 use crate::detector::{locate_sourcemap_reference_slice, SourceMapRef};
@@ -125,7 +125,7 @@ impl<'a> Iterator for Lines<'a> {
 /// This type is used to implement fairly efficient source mapping
 /// operations.
 pub struct SourceView {
-    pub(crate) source: Arc<str>,
+    pub(crate) source: BytesStr,
     line_end_offsets: Mutex<Vec<LineEndOffset>>,
 }
 
@@ -154,7 +154,7 @@ impl PartialEq for SourceView {
 
 impl SourceView {
     /// Creates an optimized view of a given source.
-    pub fn new(source: Arc<str>) -> SourceView {
+    pub fn new(source: BytesStr) -> SourceView {
         SourceView {
             source,
             line_end_offsets: Mutex::new(vec![]),
@@ -162,9 +162,9 @@ impl SourceView {
     }
 
     /// Creates an optimized view from a given source string
-    pub fn from_string(source: String) -> SourceView {
+    pub fn from_string(source: BytesStr) -> SourceView {
         SourceView {
-            source: source.into(),
+            source,
             line_end_offsets: Mutex::new(vec![]),
         }
     }
@@ -273,7 +273,7 @@ impl SourceView {
     }
 
     /// Returns the source.
-    pub fn source(&self) -> &str {
+    pub fn source(&self) -> &BytesStr {
         &self.source
     }
 
@@ -297,7 +297,7 @@ impl SourceView {
         &self,
         token: Token<'map>,
         minified_name: &str,
-    ) -> Option<&'map str> {
+    ) -> Option<&'map BytesStr> {
         if !is_valid_javascript_identifier(minified_name) {
             return None;
         }
