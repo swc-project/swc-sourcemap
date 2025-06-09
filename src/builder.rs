@@ -54,7 +54,7 @@ impl SourceMapBuilder {
     /// Creates a new source map builder and sets the file.
     pub fn new(file: Option<BytesStr>) -> SourceMapBuilder {
         SourceMapBuilder {
-            file: file.map(Into::into),
+            file,
             name_map: FxHashMap::default(),
             names: vec![],
             tokens: vec![],
@@ -129,7 +129,7 @@ impl SourceMapBuilder {
         if self.sources.len() > self.source_contents.len() {
             self.source_contents.resize(self.sources.len(), None);
         }
-        self.source_contents[src_id as usize] = contents.map(Into::into);
+        self.source_contents[src_id as usize] = contents;
     }
 
     /// Returns the current source contents for a source.
