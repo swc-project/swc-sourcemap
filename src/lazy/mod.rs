@@ -132,7 +132,7 @@ where
     }
 }
 
-type Str = Arc<str>;
+type Str = BytesStr;
 
 type StrValue<'a> = MaybeRawValue<'a, Str>;
 

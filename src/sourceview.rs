@@ -128,7 +128,7 @@ impl<'a> Iterator for Lines<'a> {
 /// This type is used to implement fairly efficient source mapping
 /// operations.
 pub struct SourceView {
-    pub(crate) source: Arc<str>,
+    pub(crate) source: BytesStr,
     processed_until: AtomicUsize,
     lines: Mutex<Vec<&'static str>>,
 }
@@ -159,7 +159,7 @@ impl PartialEq for SourceView {
 
 impl SourceView {
     /// Creates an optimized view of a given source.
-    pub fn new(source: Arc<str>) -> SourceView {
+    pub fn new(source: BytesStr) -> SourceView {
         SourceView {
             source,
             processed_until: AtomicUsize::new(0),

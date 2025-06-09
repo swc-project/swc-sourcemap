@@ -20,14 +20,14 @@ use crate::types::{RawToken, SourceMap, Token};
 /// objects is generally not very comfortable.  As a general aid this
 /// type can help.
 pub struct SourceMapBuilder {
-    file: Option<Arc<str>>,
-    name_map: FxHashMap<Arc<str>, u32>,
-    names: Vec<Arc<str>>,
+    file: Option<BytesStr>,
+    name_map: FxHashMap<BytesStr, u32>,
+    names: Vec<BytesStr>,
     tokens: Vec<RawToken>,
-    source_map: FxHashMap<Arc<str>, u32>,
-    source_root: Option<Arc<str>>,
-    sources: Vec<Arc<str>>,
-    source_contents: Vec<Option<Arc<str>>>,
+    source_map: FxHashMap<BytesStr, u32>,
+    source_root: Option<BytesStr>,
+    sources: Vec<BytesStr>,
+    source_contents: Vec<Option<BytesStr>>,
     sources_mapping: Vec<u32>,
     ignore_list: BTreeSet<u32>,
     debug_id: Option<DebugId>,
@@ -74,7 +74,7 @@ impl SourceMapBuilder {
     }
 
     /// Sets the file for the sourcemap (optional)
-    pub fn set_file<T: Into<Arc<str>>>(&mut self, value: Option<T>) {
+    pub fn set_file<T: Into<BytesStr>>(&mut self, value: Option<T>) {
         self.file = value.map(Into::into);
     }
 
@@ -84,7 +84,7 @@ impl SourceMapBuilder {
     }
 
     /// Sets a new value for the source_root.
-    pub fn set_source_root<T: Into<Arc<str>>>(&mut self, value: Option<T>) {
+    pub fn set_source_root<T: Into<BytesStr>>(&mut self, value: Option<T>) {
         self.source_root = value.map(Into::into);
     }
 
