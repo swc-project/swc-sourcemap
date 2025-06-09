@@ -111,7 +111,7 @@ impl SourceMapBuilder {
     /// Changes the source name for an already set source.
     pub fn set_source(&mut self, src_id: u32, src: BytesStr) {
         assert!(src_id != !0, "Cannot set sources for tombstone source id");
-        self.sources[src_id as usize] = src.into();
+        self.sources[src_id as usize] = src;
     }
 
     /// Looks up a source name for an ID.

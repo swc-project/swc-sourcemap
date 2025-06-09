@@ -170,7 +170,7 @@ impl SourceView {
     /// Creates an optimized view from a given source string
     pub fn from_string(source: BytesStr) -> SourceView {
         SourceView {
-            source: source.into(),
+            source,
             processed_until: AtomicUsize::new(0),
             lines: Mutex::new(vec![]),
         }
