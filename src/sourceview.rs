@@ -3,9 +3,9 @@ use std::slice;
 use std::str;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
-use std::sync::Arc;
 use std::sync::Mutex;
 
+use bytes_str::BytesStr;
 use if_chain::if_chain;
 
 use crate::detector::{locate_sourcemap_reference_slice, SourceMapRef};
@@ -168,7 +168,7 @@ impl SourceView {
     }
 
     /// Creates an optimized view from a given source string
-    pub fn from_string(source: String) -> SourceView {
+    pub fn from_string(source: BytesStr) -> SourceView {
         SourceView {
             source: source.into(),
             processed_until: AtomicUsize::new(0),
@@ -263,7 +263,7 @@ impl SourceView {
     }
 
     /// Returns the source.
-    pub fn source(&self) -> &str {
+    pub fn source(&self) -> &BytesStr {
         &self.source
     }
 
@@ -287,7 +287,7 @@ impl SourceView {
         &self,
         token: Token<'map>,
         minified_name: &str,
-    ) -> Option<&'map str> {
+    ) -> Option<&'map BytesStr> {
         if !is_valid_javascript_identifier(minified_name) {
             return None;
         }

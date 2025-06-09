@@ -110,7 +110,7 @@ impl DecodedMap {
         col: u32,
         minified_name: Option<&str>,
         source_view: Option<&SourceView>,
-    ) -> Option<&str> {
+    ) -> Option<&BytesStr> {
         match *self {
             DecodedMap::Regular(ref sm) => {
                 sm.get_original_function_name(line, col, minified_name?, source_view?)
@@ -270,7 +270,7 @@ impl<'a> Token<'a> {
     }
 
     /// get the source if it exists as string
-    pub fn get_source(&self) -> Option<&'a str> {
+    pub fn get_source(&self) -> Option<&'a BytesStr> {
         if self.raw.src_id == !0 {
             None
         } else {
@@ -284,7 +284,7 @@ impl<'a> Token<'a> {
     }
 
     /// get the name if it exists as string
-    pub fn get_name(&self) -> Option<&'a str> {
+    pub fn get_name(&self) -> Option<&'a BytesStr> {
         if self.raw.name_id == !0 {
             None
         } else {
@@ -306,10 +306,10 @@ impl<'a> Token<'a> {
     /// `(source, src_line, src_col, name)`
     pub fn to_tuple(&self) -> (&'a str, u32, u32, Option<&'a str>) {
         (
-            self.get_source().unwrap_or(""),
+            self.get_source().map(|v| &**v).unwrap_or(""),
             self.get_src_line(),
             self.get_src_col(),
-            self.get_name(),
+            self.get_name().map(|v| &**v),
         )
     }
 
@@ -367,9 +367,9 @@ pub struct SourceIter<'a> {
 }
 
 impl<'a> Iterator for SourceIter<'a> {
-    type Item = &'a str;
+    type Item = &'a BytesStr;
 
-    fn next(&mut self) -> Option<&'a str> {
+    fn next(&mut self) -> Option<&'a BytesStr> {
         self.i.get_source(self.next_idx).inspect(|_| {
             self.next_idx += 1;
         })
@@ -383,9 +383,9 @@ pub struct SourceContentsIter<'a> {
 }
 
 impl<'a> Iterator for SourceContentsIter<'a> {
-    type Item = Option<&'a str>;
+    type Item = Option<&'a BytesStr>;
 
-    fn next(&mut self) -> Option<Option<&'a str>> {
+    fn next(&mut self) -> Option<Option<&'a BytesStr>> {
         if self.next_idx >= self.i.get_source_count() {
             None
         } else {
@@ -403,9 +403,9 @@ pub struct NameIter<'a> {
 }
 
 impl<'a> Iterator for NameIter<'a> {
-    type Item = &'a str;
+    type Item = &'a BytesStr;
 
-    fn next(&mut self) -> Option<&'a str> {
+    fn next(&mut self) -> Option<&'a BytesStr> {
         self.i.get_name(self.next_idx).inspect(|_| {
             self.next_idx += 1;
         })
@@ -423,7 +423,7 @@ impl fmt::Display for Token<'_> {
         write!(
             f,
             "{}:{}:{}{}",
-            self.get_source().unwrap_or("<unknown>"),
+            self.get_source().map(|v| &**v).unwrap_or("<unknown>"),
             self.get_src_line(),
             self.get_src_col(),
             self.get_name()
@@ -470,7 +470,7 @@ impl<'a> Iterator for SourceMapSectionIter<'a> {
 /// Represents a sourcemap index in memory
 #[derive(Debug, Clone, PartialEq)]
 pub struct SourceMapIndex {
-    file: Option<String>,
+    file: Option<BytesStr>,
     sections: Vec<SourceMapSection>,
     x_facebook_offsets: Option<Vec<Option<u32>>>,
     x_metro_module_paths: Option<Vec<String>>,
@@ -636,8 +636,8 @@ impl SourceMap {
     }
 
     /// Returns the embedded filename in case there is one.
-    pub fn get_file(&self) -> Option<&str> {
-        self.file.as_deref()
+    pub fn get_file(&self) -> Option<&BytesStr> {
+        self.file.as_ref()
     }
 
     /// Sets a new value for the file.
@@ -646,11 +646,11 @@ impl SourceMap {
     }
 
     /// Returns the embedded source_root in case there is one.
-    pub fn get_source_root(&self) -> Option<&str> {
-        self.source_root.as_deref()
+    pub fn get_source_root(&self) -> Option<&BytesStr> {
+        self.source_root.as_ref()
     }
 
-    fn prefix_source(source_root: &str, source: &str) -> BytesStr {
+    fn prefix_source(source_root: &BytesStr, source: &BytesStr) -> BytesStr {
         let source_root = source_root.strip_suffix('/').unwrap_or(source_root);
         let is_valid = !source.is_empty()
             && (source.starts_with('/')
@@ -658,7 +658,7 @@ impl SourceMap {
                 || source.starts_with("https:"));
 
         if is_valid {
-            source.into()
+            source.clone()
         } else {
             format!("{source_root}/{source}").into()
         }
@@ -668,7 +668,7 @@ impl SourceMap {
     pub fn set_source_root<T: Into<BytesStr>>(&mut self, value: Option<T>) {
         self.source_root = value.map(Into::into);
 
-        match self.source_root.as_deref().filter(|rs| !rs.is_empty()) {
+        match self.source_root.as_ref().filter(|rs| !rs.is_empty()) {
             Some(source_root) => {
                 let sources_prefixed = self
                     .sources
@@ -745,7 +745,7 @@ impl SourceMap {
         col: u32,
         minified_name: &str,
         sv: &SourceView,
-    ) -> Option<&str> {
+    ) -> Option<&BytesStr> {
         self.lookup_token(line, col)
             .and_then(|token| sv.get_original_function_name(token, minified_name))
     }
@@ -756,22 +756,22 @@ impl SourceMap {
     }
 
     /// Looks up a source for a specific index.
-    pub fn get_source(&self, idx: u32) -> Option<&str> {
+    pub fn get_source(&self, idx: u32) -> Option<&BytesStr> {
         let sources = self.sources_prefixed.as_deref().unwrap_or(&self.sources);
-        sources.get(idx as usize).map(|x| &x[..])
+        sources.get(idx as usize)
     }
 
     /// Sets a new source value for an index.  This cannot add new
     /// sources.
     ///
     /// This panics if a source is set that does not exist.
-    pub fn set_source(&mut self, idx: u32, value: &str) {
-        self.sources[idx as usize] = value.into();
+    pub fn set_source(&mut self, idx: u32, value: BytesStr) {
+        self.sources[idx as usize] = value.clone();
 
         if let Some(sources_prefixed) = self.sources_prefixed.as_mut() {
             // If sources_prefixed is `Some`, we must have a nonempty `source_root`.
             sources_prefixed[idx as usize] =
-                Self::prefix_source(self.source_root.as_deref().unwrap(), value);
+                Self::prefix_source(self.source_root.as_ref().unwrap(), &value);
         }
     }
 
@@ -791,7 +791,7 @@ impl SourceMap {
     }
 
     /// Looks up the content for a source.
-    pub fn get_source_contents(&self, idx: u32) -> Option<&str> {
+    pub fn get_source_contents(&self, idx: u32) -> Option<&BytesStr> {
         self.sources_content
             .get(idx as usize)
             .and_then(Option::as_ref)
@@ -799,11 +799,11 @@ impl SourceMap {
     }
 
     /// Sets source contents for a source.
-    pub fn set_source_contents(&mut self, idx: u32, value: Option<&str>) {
+    pub fn set_source_contents(&mut self, idx: u32, value: Option<BytesStr>) {
         if self.sources_content.len() != self.sources.len() {
             self.sources_content.resize(self.sources.len(), None);
         }
-        self.sources_content[idx as usize] = value.map(|x| SourceView::from_string(x.to_string()));
+        self.sources_content[idx as usize] = value.map(|x| SourceView::from_string(x));
     }
 
     /// Iterates over all source contents
@@ -833,8 +833,8 @@ impl SourceMap {
     }
 
     /// Looks up a name for a specific index.
-    pub fn get_name(&self, idx: u32) -> Option<&str> {
-        self.names.get(idx as usize).map(|x| &x[..])
+    pub fn get_name(&self, idx: u32) -> Option<&BytesStr> {
+        self.names.get(idx as usize)
     }
 
     /// Removes all names from the sourcemap.
@@ -872,7 +872,7 @@ impl SourceMap {
         self,
         options: &RewriteOptions<'_>,
     ) -> Result<(SourceMap, Vec<u32>)> {
-        let mut builder = SourceMapBuilder::new(self.get_file());
+        let mut builder = SourceMapBuilder::new(self.get_file().cloned());
         builder.set_debug_id(self.debug_id);
 
         for token in self.tokens() {
@@ -881,8 +881,10 @@ impl SourceMap {
                 && options.with_source_contents
                 && !builder.has_source_contents(raw.src_id)
             {
-                builder
-                    .set_source_contents(raw.src_id, self.get_source_contents(token.get_src_id()));
+                builder.set_source_contents(
+                    raw.src_id,
+                    self.get_source_contents(token.get_src_id()).cloned(),
+                );
             }
         }
 
@@ -1107,7 +1109,7 @@ impl SourceMapIndex {
     ///
     /// - `file`: an optional filename of the index
     /// - `sections`: a vector of source map index sections
-    pub fn new(file: Option<String>, sections: Vec<SourceMapSection>) -> SourceMapIndex {
+    pub fn new(file: Option<BytesStr>, sections: Vec<SourceMapSection>) -> SourceMapIndex {
         SourceMapIndex {
             file,
             sections,
@@ -1125,7 +1127,7 @@ impl SourceMapIndex {
     /// - `x_facebook_offsets`: a vector of facebook offsets
     /// - `x_metro_module_paths`: a vector of metro module paths
     pub fn new_ram_bundle_compatible(
-        file: Option<String>,
+        file: Option<BytesStr>,
         sections: Vec<SourceMapSection>,
         x_facebook_offsets: Option<Vec<Option<u32>>>,
         x_metro_module_paths: Option<Vec<String>>,
@@ -1155,13 +1157,13 @@ impl SourceMapIndex {
     }
 
     /// Returns the embedded filename in case there is one.
-    pub fn get_file(&self) -> Option<&str> {
-        self.file.as_ref().map(|x| &x[..])
+    pub fn get_file(&self) -> Option<&BytesStr> {
+        self.file.as_ref()
     }
 
     /// Sets a new value for the file.
-    pub fn set_file(&mut self, value: Option<&str>) {
-        self.file = value.map(str::to_owned);
+    pub fn set_file(&mut self, value: Option<BytesStr>) {
+        self.file = value;
     }
 
     /// Returns the number of sections in this index
@@ -1201,7 +1203,7 @@ impl SourceMapIndex {
         col: u32,
         minified_name: &str,
         sv: &SourceView,
-    ) -> Option<&str> {
+    ) -> Option<&BytesStr> {
         self.lookup_token(line, col)
             .and_then(|token| sv.get_original_function_name(token, minified_name))
     }
@@ -1225,7 +1227,7 @@ impl SourceMapIndex {
     /// Flattens an indexed sourcemap into a regular one.  This requires
     /// that all referenced sourcemaps are attached.
     pub fn flatten(&self) -> Result<SourceMap> {
-        let mut builder = SourceMapBuilder::new(self.get_file());
+        let mut builder = SourceMapBuilder::new(self.get_file().cloned());
 
         for section in self.sections() {
             let (off_line, off_col) = section.get_offset();
@@ -1250,12 +1252,12 @@ impl SourceMapIndex {
                 map.sources().zip(map.source_contents()).enumerate()
             {
                 debug_assert_eq!(original_id, src_id_map.len());
-                let src_id = builder.add_source(source);
+                let src_id = builder.add_source(source.clone());
 
                 src_id_map.push(src_id);
 
                 if let Some(contents) = contents {
-                    builder.set_source_contents(src_id, Some(contents));
+                    builder.set_source_contents(src_id, Some(contents.clone()));
                 }
             }
 
@@ -1263,7 +1265,7 @@ impl SourceMapIndex {
 
             for (original_id, name) in map.names().enumerate() {
                 debug_assert_eq!(original_id, name_id_map.len());
-                let name_id = builder.add_name(name);
+                let name_id = builder.add_name(name.clone());
                 name_id_map.push(name_id);
             }
 
