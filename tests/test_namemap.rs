@@ -1,4 +1,4 @@
-use sourcemap::{SourceMap, SourceView};
+use swc_sourcemap::{SourceMap, SourceView};
 
 #[test]
 fn test_basic_name_mapping() {

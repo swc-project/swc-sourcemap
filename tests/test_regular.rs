@@ -1,4 +1,4 @@
-use sourcemap::{SourceMap, SourceMapBuilder};
+use swc_sourcemap::{SourceMap, SourceMapBuilder};
 
 #[test]
 fn test_basic_sourcemap() {

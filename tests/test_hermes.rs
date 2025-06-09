@@ -1,4 +1,4 @@
-use sourcemap::SourceMapHermes;
+use swc_sourcemap::SourceMapHermes;
 
 #[test]
 fn test_react_native_hermes() {

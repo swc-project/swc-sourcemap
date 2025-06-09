@@ -1,5 +1,5 @@
-use sourcemap::{DecodedMap, SourceMapIndex};
 use std::collections::HashMap;
+use swc_sourcemap::{DecodedMap, SourceMapIndex};
 
 #[test]
 fn test_basic_indexed_sourcemap() {

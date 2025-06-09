@@ -501,7 +501,7 @@ impl SourceMap {
     /// sourcemap is encountered an error is returned.
     ///
     /// ```rust
-    /// use sourcemap::SourceMap;
+    /// use swc_sourcemap::SourceMap;
     /// let input: &[_] = b"{
     ///     \"version\":3,
     ///     \"sources\":[\"coolstuff.js\"],
@@ -531,7 +531,7 @@ impl SourceMap {
     /// expanded.
     ///
     /// ```rust
-    /// # use sourcemap::SourceMap;
+    /// # use swc_sourcemap::SourceMap;
     /// # let input: &[_] = b"{
     /// #     \"version\":3,
     /// #     \"sources\":[\"coolstuff.js\"],
@@ -549,7 +549,7 @@ impl SourceMap {
     /// Encode a sourcemap into a data url.
     ///
     /// ```rust
-    /// # use sourcemap::SourceMap;
+    /// # use swc_sourcemap::SourceMap;
     /// # let input: &[_] = b"{
     /// #     \"version\":3,
     /// #     \"sources\":[\"coolstuff.js\"],
@@ -575,7 +575,7 @@ impl SourceMap {
     /// sourcemap is encountered an error is returned.
     ///
     /// ```rust
-    /// use sourcemap::SourceMap;
+    /// use swc_sourcemap::SourceMap;
     /// let input: &[_] = b"{
     ///     \"version\":3,
     ///     \"sources\":[\"coolstuff.js\"],
@@ -849,7 +849,7 @@ impl SourceMap {
     /// slightly compress sourcemaps if certain data is not wanted.
     ///
     /// ```rust
-    /// use sourcemap::{SourceMap, RewriteOptions};
+    /// use swc_sourcemap::{SourceMap, RewriteOptions};
     /// # let input: &[_] = b"{
     /// #     \"version\":3,
     /// #     \"sources\":[\"coolstuff.js\"],

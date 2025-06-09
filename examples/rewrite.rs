@@ -3,7 +3,7 @@ use std::fs;
 use std::io::Read;
 use std::path::Path;
 
-use sourcemap::{decode, DecodedMap, RewriteOptions, SourceMap};
+use swc_sourcemap::{decode, DecodedMap, RewriteOptions, SourceMap};
 
 fn test(sm: &SourceMap) {
     for (src_id, source) in sm.sources().enumerate() {
