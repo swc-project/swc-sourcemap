@@ -5,8 +5,8 @@ use std::env;
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
+use bytes_str::BytesStr;
 use debugid::DebugId;
 use rustc_hash::FxHashMap;
 use url::Url;

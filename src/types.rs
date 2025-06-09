@@ -14,6 +14,7 @@ use crate::hermes::SourceMapHermes;
 use crate::sourceview::SourceView;
 use crate::utils::{find_common_prefix, greatest_lower_bound};
 
+use bytes_str::BytesStr;
 use debugid::DebugId;
 
 /// Controls the `SourceMap::rewrite` behavior
