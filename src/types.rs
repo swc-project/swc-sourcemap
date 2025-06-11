@@ -1420,6 +1420,8 @@ impl SourceMapSection {
 mod tests {
     use std::collections::BTreeSet;
 
+    use crate::lazy::MaybeRawValue;
+
     use super::{DecodedMap, RewriteOptions, SourceMap, SourceMapIndex, SourceMapSection};
     use debugid::DebugId;
 
@@ -1505,6 +1507,43 @@ mod tests {
                 "bundler = {bundler}"
             );
         }
+    }
+
+    #[test]
+    fn adjust_mappings_from_multiple() {
+        let original_map_file = std::fs::read_to_string(
+            "tests/fixtures/adjust_mappings_from_multiple/sourcemapped.js.map",
+        )
+        .unwrap();
+
+        let bundled_map_file =
+            std::fs::read_to_string("tests/fixtures/adjust_mappings_from_multiple/bundle.js.map")
+                .unwrap();
+
+        let mut original_map = crate::lazy::decode(original_map_file.as_bytes())
+            .unwrap()
+            .into_source_map()
+            .unwrap();
+        original_map.file = Some(MaybeRawValue::Data("turbopack:///[project]/turbopack/crates/turbopack-tests/tests/snapshot/source_maps/input-source-map-merged/input/sourcemapped.js".into()));
+
+        let bundled_map = match crate::decode(bundled_map_file.as_bytes()).unwrap() {
+            DecodedMap::Regular(source_map) => source_map,
+            DecodedMap::Index(source_map_index) => source_map_index.flatten().unwrap(),
+            DecodedMap::Hermes(_) => unimplemented!(),
+        };
+        // original_map.adjust_mappings(&bundled_map);
+        let bundled_map = bundled_map.adjust_mappings_from_multiple(vec![original_map]);
+
+        let mut result = vec![];
+        bundled_map.to_writer(&mut result).unwrap();
+        let result = String::from_utf8(result).unwrap();
+        // std::fs::write("tests/fixtures/adjust_mappings_from_multiple/merged.js.map", result).unwrap();
+
+        let bundled_map_file =
+            std::fs::read_to_string("tests/fixtures/adjust_mappings_from_multiple/merged.js.map")
+                .unwrap();
+
+        assert_eq!(bundled_map_file, result)
     }
 
     #[test]
