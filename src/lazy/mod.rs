@@ -7,7 +7,10 @@ use crate::{
     vlq::parse_vlq_segment_into,
     Error, RawToken, Result,
 };
-use std::{borrow::Cow, collections::{BTreeSet, HashMap}};
+use std::{
+    borrow::Cow,
+    collections::{BTreeSet, HashMap},
+};
 
 use bitvec::{order::Lsb0, vec::BitVec, view::BitView};
 use bytes_str::BytesStr;
