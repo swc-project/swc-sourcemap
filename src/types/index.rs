@@ -593,10 +593,7 @@ mod tests {
         assert!(smi.adjust_sections_offset_rows(1));
 
         // The sourcemap index should remain unchanged
-        assert_eq!(
-            smi,
-            SourceMapIndex::new(Some("test.js".into()), vec![])
-        );
+        assert_eq!(smi, SourceMapIndex::new(Some("test.js".into()), vec![]));
     }
 
     #[test]
