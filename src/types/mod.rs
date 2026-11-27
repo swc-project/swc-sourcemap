@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{Read, Write};
 use std::path::Path;
 
@@ -16,9 +16,11 @@ use debugid::DebugId;
 use rustc_hash::FxHashSet;
 
 mod index;
+mod scope;
 mod token;
 
 pub use index::*;
+pub use scope::*;
 pub use token::*;
 
 /// Controls the `SourceMap::rewrite` behavior
@@ -246,6 +248,7 @@ pub struct SourceMap {
     pub(crate) sources_prefixed: Option<Vec<BytesStr>>,
     pub(crate) sources_content: Vec<Option<SourceView>>,
     pub(crate) ignore_list: BTreeSet<u32>,
+    pub(crate) scopes: BTreeMap<usize, OriginalScopes>,
     pub(crate) debug_id: Option<DebugId>,
 }
 
@@ -372,6 +375,7 @@ impl SourceMap {
                 .map(|opt| opt.map(SourceView::new))
                 .collect(),
             ignore_list: BTreeSet::default(),
+            scopes: BTreeMap::new(),
             debug_id: None,
         }
     }
@@ -738,7 +742,6 @@ pub(crate) fn adjust_mappings(
     }
 
     /// Turns a list of tokens into a list of ranges, using the provided `key` function to determine the order of the tokens.
-    #[allow(clippy::ptr_arg)]
     fn create_ranges(tokens: &mut [RawToken], key: fn(&RawToken) -> (u32, u32)) -> Vec<Range<'_>> {
         tokens.sort_unstable_by_key(key);
 
@@ -847,7 +850,6 @@ pub fn adjust_mappings_from_multiple(
     }
 
     /// Turns a list of tokens into a list of ranges, using the provided `key` function to determine the order of the tokens.
-    #[allow(clippy::ptr_arg)]
     fn create_ranges(
         tokens: &mut [(u32, RawToken)],
         key: fn(&RawToken) -> (u32, u32),
@@ -1037,7 +1039,7 @@ pub fn adjust_mappings_from_multiple(
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
     use crate::lazy::MaybeRawValue;
 
@@ -1201,6 +1203,7 @@ mod tests {
             sources_prefixed: None,
             sources_content: vec![],
             ignore_list: BTreeSet::new(),
+            scopes: BTreeMap::new(),
             debug_id: None,
         });
 
@@ -1219,6 +1222,7 @@ mod tests {
                 sources_prefixed: None,
                 sources_content: vec![],
                 ignore_list: BTreeSet::new(),
+                scopes: BTreeMap::new(),
                 debug_id: Some(DEBUG_ID.parse().expect("valid debug id")),
             })
         );
